@@ -1,0 +1,43 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Sampanna Edu mock test"><title>Mock Test | Sampanna Edu</title><link rel="stylesheet" href="css/style.css"></head>
+<body><div id="site-header"></div><main><section class="page-hero"><div class="container"><span class="breadcrumb">Sampanna Edu / Mock Test</span><h1 id="title">Loading…</h1><p id="meta"></p></div></section>
+<section class="section"><div class="container" style="max-width:820px"><div id="mock"><div class="spinner">Loading test…</div></div></div></section></main><div id="site-footer"></div>
+<script type="module">
+import "./js/app.js";
+import { supabase } from "./js/supabase.js";
+import { getStudentProfile, saveAttempt } from "./js/student.js";
+const id=new URLSearchParams(location.search).get("id"),box=document.getElementById("mock");
+let test,qs=[],answers={},i=0,endAt=0,timer;
+async function load(){
+ if(!supabase){box.innerHTML='<div class="empty">Configure Supabase first.</div>';return;}
+ const {data:t}=await supabase.from("quizzes").select("*").eq("id",id).eq("published",true).single();
+ if(!t){box.innerHTML='<div class="empty">Test not found.</div>';return;}
+ test=t;document.getElementById("title").textContent=t.title;document.getElementById("meta").textContent=`${t.exam||"Mock"} · ${t.duration_minutes} minutes`;
+ const {data:links}=await supabase.from("quiz_questions").select("question_id,position,questions(*)").eq("quiz_id",id).order("position");
+ qs=(links||[]).map(x=>x.questions).filter(Boolean);
+ if(!qs.length){box.innerHTML='<div class="empty">This test has no questions yet.</div>';return;}
+ endAt=Date.now()+test.duration_minutes*60000;render();timer=setInterval(tick,1000);
+}
+function tick(){const left=Math.max(0,endAt-Date.now()),sec=Math.ceil(left/1000),m=Math.floor(sec/60),s=sec%60;const el=document.getElementById("clock");if(el)el.textContent=`${m}:${String(s).padStart(2,"0")}`;if(left<=0){clearInterval(timer);finish()}}
+function render(){
+ const q=qs[i];
+ box.innerHTML=`<div class="quiz-card"><div class="quiz-meta"><span>Question ${i+1}/${qs.length}</span><span class="timer" id="clock"></span></div><h2>${esc(q.question)}</h2>
+ ${["A","B","C","D"].map(o=>`<label class="quiz-option ${answers[q.id]===o?"selected":""}"><input type="radio" style="display:none" value="${o}">${o}. ${esc(q["option_"+o.toLowerCase()]||"")}</label>`).join("")}
+ <div style="display:flex;justify-content:space-between;margin-top:22px"><button class="btn btn-secondary" id="prev" ${i===0?"disabled":""}>← Previous</button>${i===qs.length-1?'<button class="btn btn-primary" id="finish">Submit Test</button>':'<button class="btn btn-primary" id="next">Next →</button>'}</div></div>`;
+ tick();
+ box.querySelectorAll(".quiz-option").forEach(l=>l.onclick=()=>{answers[q.id]=l.querySelector("input").value;render()});
+ document.getElementById("prev")?.addEventListener("click",()=>{i--;render()});
+ document.getElementById("next")?.addEventListener("click",()=>{i++;render()});
+ document.getElementById("finish")?.addEventListener("click",finish);
+}
+function finish(){
+ clearInterval(timer);
+ const score=qs.reduce((n,q)=>n+(answers[q.id]===q.correct_option?1:0),0),p=getStudentProfile();
+ const elapsed=Math.max(0,Math.round((test.duration_minutes*60000-(endAt-Date.now()))/1000));
+ saveAttempt({type:"mock",title:test.title,quizId:test.id,score,totalQuestions:qs.length,timeSeconds:elapsed});
+ box.innerHTML=`<div class="result"><h2>Test submitted 🎯</h2><p>${esc(p?.name||"Student")}, your score: <strong>${score}/${qs.length}</strong> (${Math.round(score/qs.length*100)}%)</p>
+ <p style="color:var(--muted)">Your result is saved in this browser.</p><a class="btn btn-primary" href="dashboard.html">View Dashboard</a></div>`;
+}
+function esc(x=""){return String(x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+load();
+</script></body></html>

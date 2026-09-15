@@ -1,0 +1,14 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Sampanna Edu educational platform"><title>Notes | Sampanna Edu</title><link rel="stylesheet" href="css/style.css"></head><body><div id="site-header"></div><main><section class="page-hero"><div class="container"><span class="breadcrumb">Sampanna Edu / Notes</span><h1>Study Notes</h1><p>Chapter-wise and exam-focused notes.</p></div></section><section class="section"><div class="container"><div class="toolbar"><input id="search" class="form-card" style="padding:11px;width:100%" placeholder="Search notes…"></div><div id="notes" class="grid-2"><div class="spinner">Loading notes…</div></div></div></section></main><div id="site-footer"></div><script type="module" src="js/app.js"></script><script type="module">
+import { supabase } from "./js/supabase.js";
+const q=new URLSearchParams(location.search), chapter=q.get("chapter"), exam=q.get("exam"), box=document.getElementById("notes"), search=document.getElementById("search"); let all=[];
+async function load(){
+ if(!supabase){box.innerHTML='<div class="empty">Configure Supabase first.</div>';return;}
+ let query=supabase.from("notes").select("*,chapters(name),subjects(name)").eq("published",true).order("created_at",{ascending:false});
+ if(chapter) query=query.eq("chapter_id",chapter);
+ if(exam) query=query.eq("exam",exam);
+ const {data,error}=await query; if(error){box.innerHTML='<div class="empty">'+error.message+'</div>';return;}
+ all=data||[];render();
+}
+function render(){const term=search.value.toLowerCase();const d=all.filter(n=>(n.title+" "+(n.content||"")+" "+(n.subjects?.name||"")).toLowerCase().includes(term));box.innerHTML=d.length?d.map(n=>`<article class="card resource-card"><span class="pill">${esc(n.exam||"Class 11")}</span><h3>${esc(n.title)}</h3><p>${esc((n.content||"").slice(0,180))}${(n.content||"").length>180?"…":""}</p><small>${esc(n.subjects?.name||"")}${n.chapters?.name?" · "+esc(n.chapters.name):""}</small><div style="margin-top:15px"><a class="btn btn-secondary btn-small" href="note.html?id=${n.id}">Read note →</a></div></article>`).join(""):'<div class="empty">No matching notes found.</div>'}
+function esc(x=""){return x.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))} search.oninput=render;load();
+</script></body></html>

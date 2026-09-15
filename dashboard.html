@@ -1,0 +1,28 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Sampanna Edu student dashboard"><title>Dashboard | Sampanna Edu</title><link rel="stylesheet" href="css/style.css"></head>
+<body><div id="site-header"></div><main>
+<section class="page-hero"><div class="container"><span class="breadcrumb">Sampanna Edu / Dashboard</span><h1>Student Dashboard</h1><p id="welcome">Your learning activity.</p></div></section>
+<section class="section"><div class="container"><div id="dash"><div class="spinner">Loading dashboard…</div></div></div></section>
+</main><div id="site-footer"></div>
+<script type="module">
+import "./js/app.js";
+import { getStudentProfile, getAttempts } from "./js/student.js";
+const box=document.getElementById("dash");
+function esc(x=""){return String(x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+const p=getStudentProfile(), a=getAttempts();
+if(!p){
+ box.innerHTML='<div class="empty">Please enter your real name and class to continue.</div>';
+}else{
+ document.getElementById("welcome").textContent=`Welcome, ${p.name} · ${p.className}`;
+ const avg=a.length?Math.round(a.reduce((n,x)=>n+(x.totalQuestions?x.score/x.totalQuestions*100:0),0)/a.length):0;
+ box.innerHTML=`<div class="grid-3">
+ <div class="card"><span class="eyebrow">Student</span><h3>${esc(p.name)}</h3><p>${esc(p.className)}</p></div>
+ <div class="card"><span class="eyebrow">Attempts</span><h3>${a.length}</h3><p>Practice and mock attempts saved on this browser.</p></div>
+ <div class="card"><span class="eyebrow">Average</span><h3>${avg}%</h3><p>Across saved attempts.</p></div>
+ </div>
+ <div class="card" style="margin-top:20px"><h3>Recent attempts</h3>
+ <div class="table-wrap"><table class="data-table"><tr><th>Test</th><th>Score</th><th>Percent</th><th>Date</th></tr>
+ ${a.length?a.slice(0,20).map(x=>`<tr><td>${esc(x.title||"Practice")}</td><td>${x.score}/${x.totalQuestions}</td><td>${x.totalQuestions?Math.round(x.score/x.totalQuestions*100):0}%</td><td>${new Date(x.createdAt).toLocaleDateString()}</td></tr>`).join(""):'<tr><td colspan="4">No attempts yet. Start a practice set!</td></tr>'}
+ </table></div></div>`;
+}
+</script></body></html>

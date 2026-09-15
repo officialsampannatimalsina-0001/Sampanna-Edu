@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Sampanna Edu student profile">
+<title>Student Profile | Sampanna Edu</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main>
+<section class="page-hero"><div class="container">
+<span class="breadcrumb">Sampanna Edu / Profile</span>
+<h1>Student Profile</h1>
+<p>Your name and class are required to use Sampanna Edu. No student Google login is required.</p>
+</div></section>
+<section class="section"><div class="container" style="max-width:620px">
+<div class="card">
+<form id="profilePageForm" class="form-card">
+<label>Real Name<input id="name" minlength="2" maxlength="80" required placeholder="Your real name"></label>
+<label>Class / Preparation<select id="className" required>
+<option value="">Select your class</option><option>Class 11</option><option>Class 12</option>
+<option>CEE</option><option>IOE</option><option>Other</option>
+</select></label>
+<label class="real-name-check"><input id="confirm" type="checkbox" required><span>I confirm that I am using my real name.</span></label>
+<div class="notice">Profile information is stored only in this browser. Students do not need Google Authentication.</div>
+<button class="btn btn-primary" type="submit">Save Profile</button>
+<p id="status" class="form-note"></p>
+</form>
+</div></div></section>
+</main>
+<div id="site-footer"></div>
+<script type="module">
+import "./js/app.js";
+import { getStudentProfile, saveStudentProfile } from "./js/student.js";
+const p=getStudentProfile();
+if(p){name.value=p.name;className.value=p.className;confirm.checked=false;}
+document.getElementById("profilePageForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ const n=name.value.trim(), c=className.value;
+ if(!/^[\p{L}][\p{L}\s.'-]{1,79}$/u.test(n)){status.textContent="Please enter a valid real name.";return;}
+ saveStudentProfile(n,c); status.textContent="Profile saved successfully.";
+ setTimeout(()=>location.href="index.html",500);
+});
+</script>
+</body></html>

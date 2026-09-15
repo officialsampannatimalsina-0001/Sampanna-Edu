@@ -1,0 +1,14 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Sampanna Edu educational platform"><title>Class 11 | Sampanna Edu</title><link rel="stylesheet" href="css/style.css"></head><body><div id="site-header"></div><main><section class="page-hero"><div class="container"><span class="breadcrumb">Sampanna Edu / Class 11</span><h1>Class 11 Learning</h1><p>Explore subjects, chapters and available resources.</p></div></section>
+<section class="section"><div class="container"><div id="subjectGrid" class="grid-3"><div class="spinner">Loading subjects…</div></div></div></section></main><div id="site-footer"></div><script type="module" src="js/app.js"></script><script type="module">
+import { supabase } from "./js/supabase.js";
+const el=document.getElementById("subjectGrid");
+async function load(){
+ if(!supabase){el.innerHTML='<div class="empty">Connect Supabase in js/config.js to load your subjects.</div>';return;}
+ const {data,error}=await supabase.from("subjects").select("*").eq("level","class11").eq("published",true).order("name");
+ if(error){el.innerHTML='<div class="empty">'+error.message+'</div>';return;}
+ if(!data.length){el.innerHTML='<div class="empty">No Class 11 subjects have been published yet. Add them from Admin.</div>';return;}
+ el.innerHTML=data.map(s=>`<a class="card resource-card" href="subject.html?id=${s.id}"><span class="pill">${s.code||"Class 11"}</span><h3>${esc(s.name)}</h3><p>${esc(s.description||"Open subject")}</p></a>`).join("");
+}
+function esc(x=""){return x.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+load();
+</script></body></html>

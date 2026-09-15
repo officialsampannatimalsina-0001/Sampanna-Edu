@@ -1,0 +1,17 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Sampanna Edu educational platform"><title>Subject | Sampanna Edu</title><link rel="stylesheet" href="css/style.css"></head><body><div id="site-header"></div><main><section class="page-hero"><div class="container"><span class="breadcrumb">Sampanna Edu / Subject</span><h1 id="subjectName">Loading…</h1><p id="subjectDesc"></p></div></section>
+<section class="section"><div class="container"><div id="chapters" class="grid-3"></div></div></section></main><div id="site-footer"></div><script type="module" src="js/app.js"></script><script type="module">
+import { supabase } from "./js/supabase.js";
+const id=new URLSearchParams(location.search).get("id"), name=document.getElementById("subjectName"), desc=document.getElementById("subjectDesc"), box=document.getElementById("chapters");
+if(!supabase){box.innerHTML='<div class="empty">Configure Supabase first.</div>'}
+else if(!id){box.innerHTML='<div class="empty">Missing subject ID.</div>'}
+else{
+ const {data:s}=await supabase.from("subjects").select("*").eq("id",id).single();
+ if(!s){box.innerHTML='<div class="empty">Subject not found.</div>'}
+ else{
+  name.textContent=s.name;desc.textContent=s.description||"";
+  const {data:cs}=await supabase.from("chapters").select("*").eq("subject_id",id).eq("published",true).order("chapter_number");
+  box.innerHTML=cs?.length?cs.map(c=>`<div class="card resource-card"><span class="pill">Chapter ${c.chapter_number||""}</span><h3>${esc(c.name)}</h3><p>${esc(c.description||"")}</p><div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn btn-secondary btn-small" href="notes.html?chapter=${c.id}">Notes</a><a class="btn btn-primary btn-small" href="mcqs.html?chapter=${c.id}">MCQs</a></div></div>`).join(""):'<div class="empty">No chapters published yet.</div>';
+ }
+}
+function esc(x=""){return x.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+</script></body></html>
